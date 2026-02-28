@@ -97,7 +97,7 @@ College: ${college}
 });
 
 
-/* ================= STATIC FILE SERVE ================= */
+/* ================= STATIC FILE FIX ================= */
 
 const publicPath = path.join(__dirname);
 
@@ -108,9 +108,9 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(publicPath, "index.html"));
 });
 
-/* FALLBACK FIX (VERY IMPORTANT FOR RAILWAY) */
-app.get("*", (req, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
+/* CATCH-ALL FIX (EXPRESS 5 SAFE) */
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(publicPath, "index.html"));
 });
 
 
