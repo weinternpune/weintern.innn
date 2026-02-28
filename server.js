@@ -12,6 +12,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
+/* ================= TEST ROUTE ================= */
+
+app.get("/api/test", (req, res) => {
+  res.send("Backend working ✅");
+});
+
+
 /* ================= EMAIL ================= */
 
 const transporter = nodemailer.createTransport({
@@ -22,15 +30,11 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* ================= TEST ROUTE ================= */
-
-app.get("/api/test", (req, res) => {
-  res.send("Backend working ✅");
-});
 
 /* ================= ENROLL ================= */
 
 app.post("/enroll-form", async (req, res) => {
+
   try {
 
     const { name, email, course, amount } = req.body;
@@ -39,16 +43,20 @@ app.post("/enroll-form", async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Enrollment",
-      text: `${name} enrolled in ${course}`
+      text: `${name} enrolled in ${course} ₹${amount}`
     });
 
-    res.send("OK");
+    res.send("ok");
 
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("Error");
+  } catch (err) {
+
+    console.log(err);
+    res.status(500).send("error");
+
   }
+
 });
+
 
 /* ================= STATIC FILE ================= */
 
@@ -57,8 +65,11 @@ const publicPath = __dirname;
 app.use(express.static(publicPath));
 
 app.get("/", (req, res) => {
+
   res.sendFile(path.join(publicPath, "index.html"));
+
 });
+
 
 /* ================= START ================= */
 
