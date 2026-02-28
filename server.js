@@ -4,14 +4,14 @@ const Razorpay = require("razorpay");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const path = require("path"); // 1. Path module add kiya gaya hai
+const path = require("path");
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// 2. Static files (HTML, CSS, JS, Images) ko serve karne ke liye
+// Static files (HTML, CSS, JS) serve karne ke liye
 app.use(express.static(__dirname));
 
 /* ================= EMAIL TRANSPORTER ================= */
@@ -29,7 +29,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || "#RAZORPAY_KEY_SECRET#"
 });
 
-/* ================= ROUTES ================= */
+/* ================= API ROUTES ================= */
 
 app.post("/enroll-form", async (req, res) => {
   try {
@@ -40,15 +40,9 @@ app.post("/enroll-form", async (req, res) => {
       subject: "New Course Enrollment - WeIntern",
       text: `New Course Enrollment\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nCourse: ${course}\nFee: ₹${amount}`
     });
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Enrollment Received - WeIntern",
-      text: `Hello ${name},\n\nYour enrollment for "${course}" has been received.\n\nThank you 🚀\nWeIntern Team`
-    });
     res.send("Enrollment email sent");
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send("Enroll failed");
   }
 });
@@ -63,23 +57,23 @@ app.post("/create-order", async (req, res) => {
     });
     res.json(order);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send("Order failed");
   }
 });
 
-// ... Baki ke routes (apply-form, hire-form) same rahenge ...
+// Baki ke routes (apply-form, hire-form) bhi aise hi chalenge...
 
-/* ================= FRONTEND ROUTE ================= */
+/* ================= FIX FOR NODE v22 ================= */
 
-// 3. Ye route tab kaam aayega jab koi direct URL open karega
-app.get("*", (req, res) => {
+// Purana wildcard '*' error de raha tha. 
+// Naya format: Use "(.*)" instead of "*"
+app.get("(.*)", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* ================= START SERVER ================= */
-// 4. Port ko dynamic rakha hai taaki deployment server (8080) ise utha sake
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
