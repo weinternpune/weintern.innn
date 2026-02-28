@@ -5,11 +5,28 @@ const Razorpay = require("razorpay");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
+const path = require("path");   // ✅ upar hi require karo
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+
+/* =========================================================
+   SERVE FRONTEND FILES  ✅ IMPORTANT
+========================================================= */
+
+app.use(express.static(path.join(__dirname)));
+
+
+/* =========================================================
+   ROOT ROUTE  ✅ VERY IMPORTANT
+========================================================= */
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
 
 /* ================= EMAIL TRANSPORTER ================= */
 
@@ -21,7 +38,8 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* ================= RAZORPAY (FUTURE USE) ================= */
+
+/* ================= RAZORPAY ================= */
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || "#RAZORPAY_KEY_ID#",
@@ -30,12 +48,10 @@ const razorpay = new Razorpay({
 
 
 /* =========================================================
-   ENROLL FORM EMAIL (WITHOUT PAYMENT – DEMO MODE)
+   ENROLL FORM
 ========================================================= */
 
 app.post("/enroll-form", async (req, res) => {
-
-  console.log("Enroll form:", req.body);
 
   try {
 
@@ -51,36 +67,25 @@ app.post("/enroll-form", async (req, res) => {
     } = req.body;
 
 
-    // ADMIN EMAIL
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
-
       to: process.env.EMAIL_USER,
 
       subject: "New Course Enrollment - WeIntern",
 
       text: `
-New Course Enrollment
-
 Name: ${name}
 Email: ${email}
-Phone: ${phone}
-College: ${college}
-Degree: ${degree}
-Year: ${year}
-
 Course: ${course}
 Fee: ₹${amount}
       `
     });
 
 
-    // STUDENT EMAIL
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
-
       to: email,
 
       subject: "Enrollment Received - WeIntern",
@@ -88,20 +93,16 @@ Fee: ₹${amount}
       text: `
 Hello ${name},
 
-Your enrollment for "${course}" has been received.
-
-Our team will contact you soon for payment and onboarding.
-
-Thank you 🚀
-WeIntern Team
+Enrollment received successfully.
       `
     });
 
 
     res.send("Enrollment email sent");
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.log(error);
 
@@ -113,7 +114,7 @@ WeIntern Team
 
 
 /* =========================================================
-   CREATE ORDER (WHEN RAZORPAY LIVE)
+   CREATE ORDER
 ========================================================= */
 
 app.post("/create-order", async (req, res) => {
@@ -125,9 +126,7 @@ app.post("/create-order", async (req, res) => {
     const order = await razorpay.orders.create({
 
       amount: amount * 100,
-
       currency: "INR",
-
       receipt: "receipt_" + Date.now()
 
     });
@@ -148,96 +147,10 @@ app.post("/create-order", async (req, res) => {
 
 
 /* =========================================================
-   PAYMENT CONFIRMATION EMAIL
-========================================================= */
-
-app.post("/send-confirmation", async (req, res) => {
-
-  try {
-
-    const {
-      name,
-      email,
-      phone,
-      college,
-      degree,
-      year,
-      course,
-      amount,
-      paymentId
-    } = req.body;
-
-
-    await transporter.sendMail({
-
-      from: process.env.EMAIL_USER,
-
-      to: process.env.EMAIL_USER,
-
-      subject: "New Paid Enrollment - WeIntern",
-
-      text: `
-Paid Enrollment
-
-Name: ${name}
-Email: ${email}
-Phone: ${phone}
-
-Course: ${course}
-Amount: ₹${amount}
-
-Payment ID:
-${paymentId}
-      `
-    });
-
-
-    await transporter.sendMail({
-
-      from: process.env.EMAIL_USER,
-
-      to: email,
-
-      subject: "Payment Successful - WeIntern",
-
-      text: `
-Hello ${name},
-
-Payment successful.
-
-Course: ${course}
-Amount: ₹${amount}
-
-Payment ID:
-${paymentId}
-
-Thank you 🚀
-      `
-    });
-
-
-    res.send("Payment email sent");
-
-  }
-
-  catch (error) {
-
-    console.log(error);
-
-    res.status(500).send("Payment email failed");
-
-  }
-
-});
-
-
-/* =========================================================
-   APPLY FORM EMAIL
+   APPLY FORM
 ========================================================= */
 
 app.post("/apply-form", async (req, res) => {
-
-  console.log("Apply form:", req.body);
 
   try {
 
@@ -255,24 +168,14 @@ app.post("/apply-form", async (req, res) => {
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
-
       to: process.env.EMAIL_USER,
 
       subject: "New Internship Application",
 
       text: `
-Internship Application
-
 Name: ${name}
 Email: ${email}
-Phone: ${phone}
-
-College: ${college}
 Interest: ${interest}
-Year: ${year}
-
-Message:
-${message}
       `
     });
 
@@ -293,12 +196,10 @@ ${message}
 
 
 /* =========================================================
-   HIRE FORM EMAIL
+   HIRE FORM
 ========================================================= */
 
 app.post("/hire-form", async (req, res) => {
-
-  console.log("Hire form:", req.body);
 
   try {
 
@@ -316,27 +217,14 @@ app.post("/hire-form", async (req, res) => {
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
-
       to: process.env.EMAIL_USER,
 
       subject: "New Business Inquiry",
 
       text: `
-Business Inquiry
-
 Name: ${name}
 Company: ${company}
-Email: ${email}
-Phone: ${phone}
-
-Services:
-${services}
-
-Description:
-${description}
-
-Budget:
-${budget}
+Budget: ${budget}
       `
     });
 
@@ -355,22 +243,13 @@ ${budget}
 
 });
 
-/* =========================================================
-   START SERVER
-========================================================= */
 
-const path = require("path");
+/* =========================================================
+   START SERVER  ✅ FINAL FIX
+========================================================= */
 
 const PORT = process.env.PORT || 8080;
 
-// serve frontend files
-app.use(express.static(__dirname));
-
-// IMPORTANT: root route handle karo
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port " + PORT);
 });
