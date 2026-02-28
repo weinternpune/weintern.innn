@@ -33,7 +33,6 @@ const razorpay = new Razorpay({
 /* ================= ROUTES ================= */
 
 app.post("/enroll-form", async (req, res) => {
-
   try {
 
     const { name, email, phone, college, degree, year, course, amount } = req.body;
@@ -42,7 +41,14 @@ app.post("/enroll-form", async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Course Enrollment",
-      text: `Name: ${name}\nEmail: ${email}\nCourse: ${course}\nAmount: ${amount}`
+      text: `
+Name: ${name}
+Email: ${email}
+Phone: ${phone}
+College: ${college}
+Course: ${course}
+Amount: ${amount}
+      `
     });
 
     await transporter.sendMail({
@@ -55,12 +61,9 @@ app.post("/enroll-form", async (req, res) => {
     res.send("Enrollment email sent");
 
   } catch (e) {
-
     console.log(e);
     res.status(500).send("Error");
-
   }
-
 });
 
 
@@ -74,10 +77,15 @@ app.post("/apply-form", async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Application",
-      text: `${name} applied`
+      text: `
+Name: ${name}
+Email: ${email}
+Phone: ${phone}
+College: ${college}
+      `
     });
 
-    res.send("ok");
+    res.send("Application sent");
 
   } catch (e) {
 
@@ -89,17 +97,20 @@ app.post("/apply-form", async (req, res) => {
 });
 
 
-/* ================= STATIC FILE FIX ================= */
+/* ================= STATIC FILE SERVE ================= */
 
-// IMPORTANT LINE
 const publicPath = path.join(__dirname);
 
 app.use(express.static(publicPath));
 
+/* ROOT */
 app.get("/", (req, res) => {
-
   res.sendFile(path.join(publicPath, "index.html"));
+});
 
+/* FALLBACK FIX (VERY IMPORTANT FOR RAILWAY) */
+app.get("*", (req, res) => {
+  res.sendFile(path.join(publicPath, "index.html"));
 });
 
 
@@ -108,7 +119,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-
   console.log("Server running on port " + PORT);
-
 });
