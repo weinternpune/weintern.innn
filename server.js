@@ -4,15 +4,14 @@ const Razorpay = require("razorpay");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const path = require("path");
+const path = require("path"); // path module zaroori hai
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// 1. Static files serve karein (CSS, JS, Images)
+// 1. Static files ko server par access dena
 app.use(express.static(__dirname));
 
 /* ================= EMAIL CONFIG ================= */
@@ -32,22 +31,23 @@ const razorpay = new Razorpay({
 
 /* ================= API ROUTES ================= */
 
+// Enroll Form
 app.post("/enroll-form", async (req, res) => {
   try {
-    const { name, email, phone, course, amount } = req.body;
+    const { name, email, course } = req.body;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Enrollment",
       text: `Name: ${name}\nEmail: ${email}\nCourse: ${course}`
     });
-    res.status(200).send("Success");
+    res.send("Success");
   } catch (error) {
     res.status(500).send("Error");
   }
 });
 
-// Create Razorpay Order
+// Create Order (Razorpay)
 app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
@@ -62,16 +62,12 @@ app.post("/create-order", async (req, res) => {
   }
 });
 
-/* ================= THE FIX FOR PATH ERROR ================= */
+/* ================= FRONTEND SERVE FIX ================= */
 
-// Node v22 compatibility ke liye wildcard (*) ya (.*) hata kar 
-// seedha middleware function use kar rahe hain jo index.html serve karega.
-app.use((req, res, next) => {
-  if (req.method === 'GET' && !req.path.includes('.')) {
-    res.sendFile(path.join(__dirname, "index.html"));
-  } else {
-    next();
-  }
+// Yeh function hamesha index.html hi load karega 
+// chahe koi bhi route ho, isse 404 nahi aayega
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* ================= START SERVER ================= */
