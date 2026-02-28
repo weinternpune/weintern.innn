@@ -12,7 +12,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-/* EMAIL */
+/* ================= EMAIL ================= */
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -21,26 +22,30 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* TEST ROUTE */
+/* ================= TEST ROUTE ================= */
+
 app.get("/api/test", (req,res)=>{
-  res.send("Backend working");
+  res.send("Backend working ✅");
 });
 
-/* STATIC FILES */
-const publicPath = path.join(__dirname);
+/* ================= STATIC FILE ================= */
+
+const publicPath = path.resolve(__dirname);
 
 app.use(express.static(publicPath));
 
+/* ROOT */
 app.get("/", (req,res)=>{
   res.sendFile(path.join(publicPath,"index.html"));
 });
 
-/* SAFE FALLBACK */
+/* FALLBACK */
 app.use((req,res)=>{
-  res.status(404).sendFile(path.join(publicPath,"index.html"));
+  res.sendFile(path.join(publicPath,"index.html"));
 });
 
-/* START */
+/* ================= START ================= */
+
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, ()=>{
