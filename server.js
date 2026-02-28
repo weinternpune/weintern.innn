@@ -24,30 +24,46 @@ const transporter = nodemailer.createTransport({
 
 /* ================= TEST ROUTE ================= */
 
-app.get("/api/test", (req,res)=>{
+app.get("/api/test", (req, res) => {
   res.send("Backend working ✅");
+});
+
+/* ================= ENROLL ================= */
+
+app.post("/enroll-form", async (req, res) => {
+  try {
+
+    const { name, email, course, amount } = req.body;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "New Enrollment",
+      text: `${name} enrolled in ${course}`
+    });
+
+    res.send("OK");
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).send("Error");
+  }
 });
 
 /* ================= STATIC FILE ================= */
 
-const publicPath = path.resolve(__dirname);
+const publicPath = __dirname;
 
 app.use(express.static(publicPath));
 
-/* ROOT */
-app.get("/", (req,res)=>{
-  res.sendFile(path.join(publicPath,"index.html"));
-});
-
-/* FALLBACK */
-app.use((req,res)=>{
-  res.sendFile(path.join(publicPath,"index.html"));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(publicPath, "index.html"));
 });
 
 /* ================= START ================= */
 
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
