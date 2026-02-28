@@ -359,12 +359,18 @@ ${budget}
    START SERVER
 ========================================================= */
 
+const path = require("path");
+
 const PORT = process.env.PORT || 8080;
 
-// serve frontend files also
+// serve frontend files
 app.use(express.static(__dirname));
+
+// IMPORTANT: root route handle karo
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
-
 });
