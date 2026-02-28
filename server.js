@@ -8,13 +8,14 @@ const path = require("path");
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Static files (HTML, CSS, JS) serve karne ke liye
+// 1. Static files serve karein (CSS, JS, Images)
 app.use(express.static(__dirname));
 
-/* ================= EMAIL TRANSPORTER ================= */
+/* ================= EMAIL CONFIG ================= */
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -25,56 +26,56 @@ const transporter = nodemailer.createTransport({
 
 /* ================= RAZORPAY ================= */
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || "#RAZORPAY_KEY_ID#",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "#RAZORPAY_KEY_SECRET#"
+  key_id: process.env.RAZORPAY_KEY_ID || "#",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "#"
 });
 
 /* ================= API ROUTES ================= */
 
 app.post("/enroll-form", async (req, res) => {
   try {
-    const { name, email, phone, college, degree, year, course, amount } = req.body;
+    const { name, email, phone, course, amount } = req.body;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
-      subject: "New Course Enrollment - WeIntern",
-      text: `New Course Enrollment\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nCourse: ${course}\nFee: ₹${amount}`
+      subject: "New Enrollment",
+      text: `Name: ${name}\nEmail: ${email}\nCourse: ${course}`
     });
-    res.send("Enrollment email sent");
+    res.status(200).send("Success");
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Enroll failed");
+    res.status(500).send("Error");
   }
 });
 
+// Create Razorpay Order
 app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
     const order = await razorpay.orders.create({
       amount: amount * 100,
       currency: "INR",
-      receipt: "receipt_" + Date.now()
+      receipt: "rcpt_" + Date.now()
     });
     res.json(order);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Order failed");
+  } catch (err) {
+    res.status(500).send(err);
   }
 });
 
-// Baki ke routes (apply-form, hire-form) bhi aise hi chalenge...
+/* ================= THE FIX FOR PATH ERROR ================= */
 
-/* ================= FIX FOR NODE v22 ================= */
-
-// Purana wildcard '*' error de raha tha. 
-// Naya format: Use "(.*)" instead of "*"
-app.get("(.*)", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+// Node v22 compatibility ke liye wildcard (*) ya (.*) hata kar 
+// seedha middleware function use kar rahe hain jo index.html serve karega.
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.includes('.')) {
+    res.sendFile(path.join(__dirname, "index.html"));
+  } else {
+    next();
+  }
 });
 
 /* ================= START SERVER ================= */
 const PORT = process.env.PORT || 8080;
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
